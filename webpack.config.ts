@@ -2,7 +2,7 @@ import * as path from "path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 
 module.exports = {
-    entry: "./src/index.ts",
+    entry: path.resolve(__dirname, 'src/index.tsx'),
     module: {
         rules: [
             {
@@ -12,6 +12,7 @@ module.exports = {
             },
         ],
     },
+    devtool: 'inline-source-map',
     resolve: {
         extensions: [".tsx", ".ts", ".js"],
     },
