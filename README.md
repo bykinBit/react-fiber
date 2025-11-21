@@ -1,2 +1,5 @@
 # react-fiber
-react basic theory
+事件处理分为三个阶段
+1、初次渲染
+2、事件注册
+3、事件触发

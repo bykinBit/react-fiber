@@ -1,32 +1,26 @@
-import { IndeterminateComponent } from './ReactWorkTags'
-import { render } from './ReactFiberWorkLoop'
-import { useReducer,useState } from './ReactFiberHooks'
-// const reducer = (state: any, action: any) => {
-//     if (action.type === 'add') {
-//         return state + 1;
-//     } else {
-//         return state;
-//     }
-// }
-//函数组件
-function Counter() {
-    // const [number, dispatch] = useReducer(reducer, 0);
-    const [number,setNumer]=useState(0);
-    console.log('number', number);
-    const A = {
-        type: "div",
-        props: {
-            onClick: () => setNumer(2),
-            children: [number]
-        }
-    }
-    return A
-}
-debugger
-let workInProgress = {
-    tag: IndeterminateComponent,
-    type: Counter,//此组件的具体类型
-    alternate: null,
-} as any;
-render(workInProgress)
+import React from './react';
+import ReactDOM from './react-dom';
 
+const handleDivClick=(event:any)=>{
+    console.log('父元素的冒泡');
+}
+const handleDivClickCapture=()=>{
+    console.log('父元素的捕获');
+}
+const handleButtonClick=(event:any)=>{
+    console.log('子元素的冒泡');
+}
+const handleButtonClickCapture=()=>{
+    console.log('子元素的捕获');
+}
+
+let element=React.createElement('div',{
+    onClick:handleDivClick,
+    onClickCapture:handleDivClickCapture
+},React.createElement('button',{
+    onClick:handleButtonClick,
+    onClickCapture:handleButtonClickCapture
+},'点击'))
+console.log(element)
+
+ReactDOM.render(element,document.getElementById('root'))
