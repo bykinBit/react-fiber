@@ -1,4 +1,5 @@
-import React from "./React";
+import React from "./react";
+import ReactDOM from "./react-dom";
 
 let el = React.createElement("div", { key: "title", id: "title" }, "title");
-console.log(el);
+ReactDOM.render(el,document.getElementById('root'));
