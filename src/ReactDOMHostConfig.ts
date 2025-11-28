@@ -12,6 +12,9 @@ export function finalizeInitialChildren(domElement:any,type:any,props:any){
 export function appendChild(parentInstance:any,child:any){
     parentInstance.appendChild(child);
 }
+export function insertBefore(parentInstance:any,child:any,before:any){
+    parentInstance.insertBefore(child,before);
+}
 export function prepareUpdate(domElement:any,type:any,oldProps:any,newProps:any){
     return diffProperties(domElement,type,oldProps,newProps);
 }

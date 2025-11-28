@@ -29,7 +29,6 @@ function createElement(type: string, config: any, ...children: any) {
     }
     props.children = childrenArray;
   }
-  console.log(props);
   
   return {
     $$typeof: REACT_ELEMENT_TYPE,
