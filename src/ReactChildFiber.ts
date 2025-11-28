@@ -18,7 +18,11 @@ function childReconciler(shouldTrackSideEffects: boolean) {
         childToDelete.flags=Deletion;
     }
     function useFiber(oldFiber:any,pendingProps:any){
-        return createWorkInProgress(oldFiber,pendingProps);
+        const clone=createWorkInProgress(oldFiber,pendingProps);
+        // clone.index=0;
+        clone.sibling=null;
+        return clone;
+
     }
     function deleteRemainingChildren(returnFiber:any,childToDelete:any){
         while(childToDelete){
@@ -56,6 +60,30 @@ function childReconciler(shouldTrackSideEffects: boolean) {
         }
         return newFiber;
     }
+    function createChild(returnFiber:any,newChild:any){
+        const created=createFiberFromElement(newChild);
+        created.return=returnFiber;
+        return created;
+    }
+    function reconcileChildrenArray(returnFiber:any,currentFirstChild:any,newChildren:any){
+        let resultingFirstChild:any=null;
+        let previousNewFiber:any=null;
+        let oldFiber=currentFirstChild;
+        let newIdx=0;
+        if(!oldFiber){
+            for(;newIdx<newChildren.length;newIdx++){
+                const newFiber=createChild(returnFiber,newChildren[newIdx]);
+                if(!previousNewFiber){
+                    resultingFirstChild=newFiber;
+                }else{
+                    previousNewFiber.sibling=newFiber;
+                }
+                previousNewFiber=newFiber;
+            }
+            return resultingFirstChild;
+        }
+        return resultingFirstChild;
+    }
     function reconcileChildFibers(returnFiber: any, currentFirstChild: any, newChild: any) {
         const isObject = typeof newChild === 'object' && (newChild);
         if (isObject) {
@@ -63,6 +91,9 @@ function childReconciler(shouldTrackSideEffects: boolean) {
                 case REACT_ELEMENT_TYPE:
                     return placeSingleChild(reconcilSingleElement(returnFiber, currentFirstChild, newChild));
             }
+        }
+        if(Array.isArray(newChild)){
+            return reconcileChildrenArray(returnFiber, currentFirstChild, newChild);
         }
     }
 

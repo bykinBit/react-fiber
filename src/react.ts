@@ -1,6 +1,6 @@
 import { REACT_ELEMENT_TYPE } from "./ReactSymbols";
 const RESERVED_PROPS = [] as any;
-function createElement(type: string, config: any, children: any) {
+function createElement(type: string, config: any, ...children: any) {
   let propName: any;
   const props = {} as any;
   let key = null;
@@ -18,16 +18,19 @@ function createElement(type: string, config: any, children: any) {
       }
     }
   }
-  const childrenLength = arguments.length - 2;
+  const childrenLength = children.length;
   if (childrenLength === 1) {
-    props.children = children;
+    props.children = children[0];
   } else if (childrenLength > 1) {
-    const childrenArray = new Array(childrenLength);
+    // const childrenArray=new Array(childrenLength)
+    const childrenArray = Array.from({ length: childrenLength });
     for (let i = 0; i < childrenLength; i++) {
-      childrenArray[i] = arguments[i + 2];
+      childrenArray[i] = children[i];
     }
     props.children = childrenArray;
   }
+  console.log(props);
+  
   return {
     $$typeof: REACT_ELEMENT_TYPE,
     type,

@@ -5,7 +5,6 @@ function render(element:any,container:any){
     if(!fiberRoot){
         fiberRoot=container.__reactRootContainer=createFiberRoot(container);
     }
-    console.log(fiberRoot);
     updateContainer(element,fiberRoot)
 }
 const ReactDOM={

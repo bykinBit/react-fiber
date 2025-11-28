@@ -1,4 +1,4 @@
-import { createElement, setInitialProperties } from "./ReactDOMComponent";
+import { createElement, setInitialProperties,diffProperties } from "./ReactDOMComponent";
 
 export function shouldSetTextContent(type:any,pendingProps:any){
     return typeof pendingProps.children==='string'||typeof pendingProps.children==='number';
@@ -11,4 +11,10 @@ export function finalizeInitialChildren(domElement:any,type:any,props:any){
 }
 export function appendChild(parentInstance:any,child:any){
     parentInstance.appendChild(child);
+}
+export function prepareUpdate(domElement:any,type:any,oldProps:any,newProps:any){
+    return diffProperties(domElement,type,oldProps,newProps);
+}
+export function removeChild(parentInstance:any,child:any){
+    return parentInstance.removeChild(child);
 }
