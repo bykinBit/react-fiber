@@ -2,7 +2,7 @@ import * as path from "path";
 import HtmlWebpackPlugin from "html-webpack-plugin";
 
 module.exports = {
-  entry: path.resolve(__dirname, "src/index.ts"),
+  entry: path.resolve(__dirname, "src/index.tsx"),
   module: {
     rules: [
       {
