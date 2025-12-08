@@ -8,6 +8,8 @@ function updateProps(dom:any,oldProps={},newProps:any){
             for(const attr in styleObject){
                 dom.style[attr]=styleObject[attr];
             }
+        }else if(/^on[A-Z].*/.test(key)){
+            dom[key.toLowerCase()]=newProps[key]
         }else{
             dom[key]=newProps[key];
         }
@@ -26,12 +28,14 @@ function reconcileChildren(childrenVdom:any,parentDOM:any){
 function mountFunctionComponent(vdom:any):any{
     const {type,props}=vdom;
     const renderVdom=type(props);
+    vdom.oldRenderVdom=renderVdom;
     return createDOM(renderVdom)
 }
 function mountClassComponent(vdom:any):any{
     const {type,props}=vdom;
     const classInstance=new type(props);
     const renderVdom=classInstance.render();
+    classInstance.oldRenderVdom=renderVdom;
     return createDOM(renderVdom);
 }
 function createDOM(vdom:any){
@@ -59,11 +63,21 @@ function createDOM(vdom:any){
             }
         }
     }
+    vdom.realDom=dom;
     return dom;
 }
 function mount(vdom:any,container:any){
     const newDOM=createDOM(vdom);
     container.appendChild(newDOM);
+}
+export function findDOM(vdom:any){
+    if(!vdom)return null;
+    return vdom.realDom;
+}
+export function compareTwoVdom(parentDOM:any,oldVdom:any,newVdom:any){
+    let oldDOM=findDOM(oldVdom);
+    let newDOM=createDOM(newVdom);
+    parentDOM.replaceChild(newDOM,oldDOM);
 }
 class DOMRoot{
     container:any;
