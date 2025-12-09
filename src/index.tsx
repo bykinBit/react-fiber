@@ -24,6 +24,7 @@ class ClassComponent extends React.Component {
         }, 1000);
         updateQueue.isBatchingUpdate=false;
         updateQueue.batchUpdate()
+        console.log('click Button');
         // this.setState((state:any)=>({
         //     number: state.number + 1
         // }),()=>{
@@ -31,12 +32,24 @@ class ClassComponent extends React.Component {
 
         // });
     };
+    clickDiv(){
+        console.log('click Div');
+        
+    }
+    clickDivCapture(){
+        console.log('click Div capture');
+        
+    }
+    clickButtonCapture(event:any){
+        console.log('click button capture');
+        event.stopPropagation()
+    }
     render() {
         return (
-            <div className="title" style={{ color: "red" }}>
+            <div className="title" style={{ color: "red" }} onClick={this.clickDiv} onClickCapture={this.clickDivCapture}>
                 <p>number:{this.state.number}</p>
                 <p>age:{this.state.age}</p>
-                <button onClick={this.handleClick}>点击</button>
+                <button onClick={this.handleClick} onClickCapture={this.clickButtonCapture}>点击</button>
             </div>
         );
     }

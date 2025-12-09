@@ -1,4 +1,5 @@
 import { REACT_TEXT } from "../constant";
+import { addEvent } from "../event";
 function updateProps(dom:any,oldProps={},newProps:any){
     for(let key in newProps){
         if(key==='children'){
@@ -9,7 +10,8 @@ function updateProps(dom:any,oldProps={},newProps:any){
                 dom.style[attr]=styleObject[attr];
             }
         }else if(/^on[A-Z].*/.test(key)){
-            dom[key.toLowerCase()]=newProps[key]
+            // dom[key.toLowerCase()]=newProps[key]
+            addEvent(dom,key,newProps[key])
         }else{
             dom[key]=newProps[key];
         }

@@ -3,6 +3,7 @@ export let updateQueue = {
     isBatchingUpdate: false,
     updaters: new Set(),
     batchUpdate() {
+        updateQueue.isBatchingUpdate=false;
         for (const updater of updateQueue.updaters) {
             (updater as any).updateComponent();
         }
