@@ -1,60 +1,79 @@
 import React from "./react";
 import ReactDOM from "./react-dom/client";
-import { updateQueue } from "./Component";
-// function FunctionComponent(props:any){
-//     return (<div className="title" style={{color:'red'}}><span>{props.title}</span></div>)
-// }
-// const element=<FunctionComponent title='world'/>
-class ClassComponent extends React.Component {
+
+function TextInput(props:any,forwardRef:any) {
+    return (
+        <input ref={forwardRef}/>
+    )
+}
+const ForwardTextInput=React.forwardRef(TextInput);
+class Form extends React.Component {
     constructor(props: any) {
         super(props);
-        this.state = { number: 0, age: 16 };
+        this.ref = React.createRef();
     }
-    handleClick = () => {
-        updateQueue.isBatchingUpdate=true;
-        this.setState({ number: this.state.number + 1 });
-        console.log(this.state.number);
-        this.setState({ number: this.state.number + 1 });
-        console.log(this.state.number);
-        setTimeout(() => {
-            this.setState({ number: this.state.number + 1 });
-            console.log(this.state.number);
-            this.setState({ number: this.state.number + 1 });
-            console.log(this.state.number);
-        }, 1000);
-        updateQueue.isBatchingUpdate=false;
-        updateQueue.batchUpdate()
-        console.log('click Button');
-        // this.setState((state:any)=>({
-        //     number: state.number + 1
-        // }),()=>{
-        //     console.log(this.state);
-
-        // });
-    };
-    clickDiv(){
-        console.log('click Div');
-        
-    }
-    clickDivCapture(){
-        console.log('click Div capture');
-        
-    }
-    clickButtonCapture(event:any){
-        console.log('click button capture');
-        event.stopPropagation()
+    getFocus = () => {
+        this.ref.current.focus();
     }
     render() {
         return (
-            <div className="title" style={{ color: "red" }} onClick={this.clickDiv} onClickCapture={this.clickDivCapture}>
-                <p>number:{this.state.number}</p>
-                <p>age:{this.state.age}</p>
-                <button onClick={this.handleClick} onClickCapture={this.clickButtonCapture}>点击</button>
+            <div>
+                <ForwardTextInput ref={this.ref} />
+                <button onClick={this.getFocus}>获得焦点</button>
             </div>
-        );
+        )
     }
 }
-const element = <ClassComponent title="world" />;
+// class TextInput extends React.Component {
+//     constructor(props: any) {
+//         super(props);
+//         this.ref = React.createRef()
+//     }
+//     getFocus = () => {
+//         this.ref.current.focus()
+//     }
+//     render() {
+//         return (
+//             <input ref={this.ref} />
+//         );
+//     }
+// }
+// class Form extends React.Component {
+//     constructor(props: any) {
+//         super(props);
+//         this.ref=React.createRef();
+//     }
+//     getFocus = () => {
+//         this.ref.current.getFocus();
+//     }
+//     render() {
+//         return (
+//             <div>
+//                 <TextInput ref={this.ref} />
+//                 <button onClick={this.getFocus}>获得焦点</button>
+//             </div>
+//         )
+//     }
+// }
+// class Sum extends React.Component {
+//     constructor(props: any) {
+//         super(props)
+//         this.a = React.createRef();
+//         this.b = React.createRef();
+//         this.c = React.createRef();
+//     }
+//     add = () => {
+//         this.c.current.value = this.a.current.value + this.b.current.value;
+//     }
+//     render() {
+//         return (
+//             <div>
+//                 <input ref={this.a} />+<input ref={this.b} /><button onClick={this.add}>=</button><input ref={this.c} />
+//             </div>
+//         )
+//     }
+// }
+const element = <Form />;
 console.log(element);
 
 const DOMRoot = ReactDOM.createRoot(document.getElementById("root"));

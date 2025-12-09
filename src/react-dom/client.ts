@@ -1,4 +1,4 @@
-import { REACT_TEXT } from "../constant";
+import { REACT_FORWARD_REF_TYPE, REACT_TEXT } from "../constant";
 import { addEvent } from "../event";
 function updateProps(dom:any,oldProps={},newProps:any){
     for(let key in newProps){
@@ -33,17 +33,26 @@ function mountFunctionComponent(vdom:any):any{
     vdom.oldRenderVdom=renderVdom;
     return createDOM(renderVdom)
 }
+function mountForwardComponent(vdom:any):any{
+    const {type,props,ref}=vdom;
+    const renderVdom=type.render(props,ref);
+    vdom.oldRenderVdom=renderVdom;
+    return createDOM(renderVdom);
+}
 function mountClassComponent(vdom:any):any{
-    const {type,props}=vdom;
+    const {type,props,ref}=vdom;
     const classInstance=new type(props);
+    if(ref)ref.current=classInstance;
     const renderVdom=classInstance.render();
     classInstance.oldRenderVdom=renderVdom;
     return createDOM(renderVdom);
 }
 function createDOM(vdom:any){
-    const {type,props}=vdom;
+    const {type,props,ref}=vdom;
     let dom;
-    if(type===REACT_TEXT){
+    if(type&&type.$$typeof===REACT_FORWARD_REF_TYPE){
+        return mountForwardComponent(vdom);
+    }else if(type===REACT_TEXT){
         dom=document.createTextNode(props);
     }else if(typeof type==='function'){
         // Distinguish between class and function components
@@ -66,6 +75,9 @@ function createDOM(vdom:any){
         }
     }
     vdom.realDom=dom;
+    if(ref){
+        ref.current=dom;
+    }
     return dom;
 }
 function mount(vdom:any,container:any){
