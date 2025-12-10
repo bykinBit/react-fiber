@@ -13,6 +13,7 @@ export let updateQueue = {
 class Updater {
     classInstance: any;
     pengingState: any;
+    nextProps:any;
     callbacks: any;
     constructor(classInstance: any) {
         this.classInstance = classInstance;
@@ -32,7 +33,8 @@ class Updater {
             this.callbacks.length = 0;
         }
     }
-    emitUpdate() {
+    emitUpdate(nextProps?:any) {
+        this.nextProps=nextProps;
         if (updateQueue.isBatchingUpdate) {
             updateQueue.updaters.add(this)
         } else {
@@ -41,9 +43,9 @@ class Updater {
 
     }
     updateComponent() {
-        const { pengingState, classInstance } = this;
-        if (pengingState.length > 0) {
-            shouldUpdate(classInstance, this.getState());
+        const { pengingState, classInstance,nextProps } = this;
+        if (nextProps||pengingState.length > 0) {
+            shouldUpdate(classInstance,nextProps,this.getState());
         }
     }
     getState() {
@@ -59,9 +61,21 @@ class Updater {
         return state;
     }
 }
-function shouldUpdate(classInstance: any, nextState: any) {
+function shouldUpdate(classInstance: any,nextProps:any,nextState: any) {
+    let willUpdate=true;
+    if(classInstance.shouldComponentUpdate&&(!classInstance.shouldComponentUpdate(nextProps,nextState))){
+        willUpdate=false;
+    }
+    if(willUpdate&&classInstance.UNSAFE_componentWillMount){
+        classInstance.UNSAFE_componentWillMount();
+    }
     classInstance.state = nextState;
-    classInstance.forceUpdate()
+    if(nextProps){
+        classInstance.nextProps=nextProps;
+    }
+    if(willUpdate){
+        classInstance.forceUpdate()
+    }
 }
 export class Component {
     [x: string]: any;
@@ -87,5 +101,8 @@ export class Component {
         compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
         this.oldRenderVdom = newRenderVdom;
         this.updater.flushCallbacks()
+        if(this.componentDidUpdate){
+            this.componentDidUpdate(this.props,this.state);
+        }
     }
 }

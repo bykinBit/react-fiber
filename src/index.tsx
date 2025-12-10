@@ -1,79 +1,77 @@
 import React from "./react";
 import ReactDOM from "./react-dom/client";
 
-function TextInput(props:any,forwardRef:any) {
-    return (
-        <input ref={forwardRef}/>
-    )
-}
-const ForwardTextInput=React.forwardRef(TextInput);
-class Form extends React.Component {
-    constructor(props: any) {
+class Counter extends React.Component{
+    static defaultProps={
+        name:'hello'
+    }
+    constructor(props:any){
         super(props);
-        this.ref = React.createRef();
+        this.state={number:0}
+        console.log('Counter 1.constructor');
     }
-    getFocus = () => {
-        this.ref.current.focus();
+    UNSAFE_componentWillMount(){
+        console.log('Counter 2.componentWillMount');
     }
-    render() {
+    handleClick=()=>{
+        this.setState({number:this.state.number+1})
+    }
+    shouldComponentUpdate(nextProps:any,nextState:any){
+        console.log('Counter 5.shouldComponentUpdate');
+        return nextState.number%2===0;
+    }
+    UNSAFE_componentWillUpdate(){
+        console.log('Counter 6.componentWillUpdate');
+    }
+    componentDidUpdate(){
+        console.log('Counter 7.componentDidUpdate');
+    }
+    render(){
+        console.log('Counter 3.render');
         return (
             <div>
-                <ForwardTextInput ref={this.ref} />
-                <button onClick={this.getFocus}>获得焦点</button>
+                <p>number:{this.state.number}</p>
+                {
+                    this.state.number===4?null:<FunctionCounter count={this.state.number}/>
+                }
+                <button onClick={this.handleClick}>+</button>
             </div>
         )
     }
+    componentDidMount(){
+        console.log('Counter 4.componentDidMount');
+    }
 }
-// class TextInput extends React.Component {
-//     constructor(props: any) {
-//         super(props);
-//         this.ref = React.createRef()
-//     }
-//     getFocus = () => {
-//         this.ref.current.focus()
-//     }
-//     render() {
-//         return (
-//             <input ref={this.ref} />
-//         );
-//     }
-// }
-// class Form extends React.Component {
-//     constructor(props: any) {
-//         super(props);
-//         this.ref=React.createRef();
-//     }
-//     getFocus = () => {
-//         this.ref.current.getFocus();
-//     }
-//     render() {
-//         return (
-//             <div>
-//                 <TextInput ref={this.ref} />
-//                 <button onClick={this.getFocus}>获得焦点</button>
-//             </div>
-//         )
-//     }
-// }
-// class Sum extends React.Component {
-//     constructor(props: any) {
-//         super(props)
-//         this.a = React.createRef();
-//         this.b = React.createRef();
-//         this.c = React.createRef();
-//     }
-//     add = () => {
-//         this.c.current.value = this.a.current.value + this.b.current.value;
-//     }
-//     render() {
-//         return (
-//             <div>
-//                 <input ref={this.a} />+<input ref={this.b} /><button onClick={this.add}>=</button><input ref={this.c} />
-//             </div>
-//         )
-//     }
-// }
-const element = <Form />;
+function FunctionCounter(props:any){
+    return (
+        <div>{props.count}</div>
+    )
+}
+class ChildCounter extends React.Component{
+    UNSAFE_componentWillReceiveProps(newProps:any){
+        console.log('ChildCounter 4.UNSAFE_componentWillReceiveProps');
+    }
+    UNSAFE_componentWillMount(){
+        console.log('ChildCounter 1.UNSAFE_componentWillMount');
+    }
+    shouldComponentUpdate(nextProps:any,nextState:any){
+        console.log('ChildCounter 5.UNSAFE_componentWillMount');
+        return nextProps.count%3===0;
+    }
+    render(){
+        console.log('ChildCounter 2.render')
+        return (
+            <p>childCount:{this.props.count}</p>
+        );
+    }
+    componentDidMount(){
+        console.log('ChildCounter 3.componentDidMount');
+    }
+    UNSAFE_componentWillUnmount(){
+        console.log('ChildCounter 6.UNSAFE_componentWillUnmount');
+    }
+}
+const element = <Counter age={16}/>;
 console.log(element);
 
 const DOMRoot = ReactDOM.createRoot(document.getElementById("root"));
