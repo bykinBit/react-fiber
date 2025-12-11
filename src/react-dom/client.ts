@@ -24,6 +24,7 @@ function updateProps(dom: any, oldProps = {}, newProps: any) {
 }
 function reconcileChildren(childrenVdom: any, parentDOM: any) {
     for (let i = 0; i < childrenVdom.length; i++) {
+        childrenVdom[i].mountIndex=i;
         mount(childrenVdom[i], parentDOM);
     }
 }
@@ -78,6 +79,7 @@ function createDOM(vdom: any) {
         updateProps(dom, {}, props);
         if (props.children) {
             if (typeof props.children === 'object' && props.children.type) {
+                props.children.mountIndex=0;
                 mount(props.children, dom)
             } else if (Array.isArray(props.children)) {
                 reconcileChildren(props.children, dom);
@@ -179,11 +181,69 @@ function updateClassComponent(oldVdom:any,newVdom:any){
 function updateChildren(parentDOM:any,oldVChildren:any,newVChildren:any){
     oldVChildren=Array.isArray(oldVChildren)?oldVChildren:[oldVChildren];
     newVChildren=Array.isArray(newVChildren)?newVChildren:[newVChildren];
-    let maxLength=Math.max(oldVChildren.length,newVChildren.length);
-    for(let i=0;i<maxLength;i++){
-        let nextVdom=oldVChildren.find((item:any,index:number)=>index>i&&item&&findDOM(item));
-        compareTwoVdom(parentDOM,oldVChildren[i],newVChildren[i],findDOM(nextVdom));
-    }
+    const keyedOldMap=new Map();
+    let lastPlacedIndex=-1;
+    oldVChildren.forEach((oldChild:any,index:number)=>{
+        let oldKey=oldChild.key?oldChild.key:index;
+        keyedOldMap.set(oldKey,oldChild);
+    });
+    let patch=[] as any;
+    newVChildren.forEach((newVChild:any,index:number)=>{
+        newVChild.mountIndex=index;
+        let newKey=newVChild.key?newVChild.key:index;
+        let oldVChild=keyedOldMap.get(newKey);
+        if(oldVChild){
+            updateElement(oldVChild,newVChild);
+            if(oldVChild.mountIndex<lastPlacedIndex){
+                patch.push({
+                    type:'MOVE',
+                    oldVChild,
+                    newVChild,
+                    mountIndex:index
+                });
+            }
+            keyedOldMap.delete(newKey);
+            lastPlacedIndex=Math.max(oldVChild.mountIndex,lastPlacedIndex);
+        }else{
+            patch.push({
+                type:'PLACEMENT',
+                newVChild,
+                mountIndex:index
+            });
+        }
+    });
+    const moveVChildren=patch.filter((action:any)=>action.type==='MOVE').map((action:any)=>action.oldVChild);
+    [...keyedOldMap.values()].concat(moveVChildren).forEach((oldVChild:any)=>{
+        let currentDOM=findDOM(oldVChild);
+        parentDOM.removeChild(currentDOM);
+    });
+    patch.forEach((action:any)=>{
+        const {type,oldVChild,newVChild,mountIndex}=action;
+        let oldTrueDOMs=parentDOM.childNodes;
+        if(type==='PLACEMENT'){
+            let newDOM=createDOM(newVChild);
+            let oldTrueDOM=oldTrueDOMs[mountIndex];
+            if(oldTrueDOM){
+                parentDOM.insertBefore(newDOM,oldTrueDOM);
+            }else{
+                parentDOM.appendChild(newDOM);
+            }
+
+        }else if(type==='MOVE'){
+            let oldDOM=findDOM(oldVChild);
+            let oldTrueDOM=oldTrueDOMs[mountIndex];
+            if(oldTrueDOM){
+                parentDOM.insertBefore(oldDOM,oldTrueDOM);
+            }else{
+                parentDOM.appendChild(oldDOM);
+            }
+        }
+    });
+    // let maxLength=Math.max(oldVChildren.length,newVChildren.length);
+    // for(let i=0;i<maxLength;i++){
+    //     let nextVdom=oldVChildren.find((item:any,index:number)=>index>i&&item&&findDOM(item));
+    //     compareTwoVdom(parentDOM,oldVChildren[i],newVChildren[i],findDOM(nextVdom));
+    // }
 }
 function unMountVdom(vdom: any) {
     const { props, ref } = vdom;
