@@ -80,11 +80,12 @@ function shouldUpdate(classInstance: any,nextProps:any,nextState: any) {
 export class Component {
     [x: string]: any;
     static isReactComponent = true;
+    // Subclasses can optionally implement React-like static lifecycle hook
+    static getDerivedStateFromProps?: (props: any, state: any) => any;
     props: any;
     state: any;
     context: any;
     updater: any;
-
     constructor(props: any, context?: any) {
         this.props = props;
         this.context = context;
@@ -93,9 +94,19 @@ export class Component {
     setState(partialState: any, callback?: any) {
         this.updater.addState(partialState, callback);
     }
-
     forceUpdate() {
         let oldRenderVdom = this.oldRenderVdom;
+        console.log('this.state',this.state);
+        
+        const { getDerivedStateFromProps } = this.constructor as typeof Component;
+        if(getDerivedStateFromProps){
+            const newState=getDerivedStateFromProps(this.props,this.state);
+            console.log('newState',newState);
+            
+            if(newState){
+                this.state={...this.state,...newState}
+            }
+        }
         let newRenderVdom = this.render();
         const oldDOM = findDOM(oldRenderVdom);
         compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
