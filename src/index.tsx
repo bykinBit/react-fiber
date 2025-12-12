@@ -18,8 +18,8 @@ class Counter extends React.Component {
     }
     shouldComponentUpdate(nextProps: any, nextState: any) {
         console.log('Counter 5.shouldComponentUpdate');
-        // return true;
-        return nextState.number % 2 === 0;
+        return true;
+        // return nextState.number % 2 === 0;
     }
     UNSAFE_componentWillUpdate() {
         console.log('Counter 6.componentWillUpdate');
@@ -32,10 +32,10 @@ class Counter extends React.Component {
         return (
             <div>
                 <p>number:{this.state.number}</p>
-                {/* <ChildCounter count={this.state.number} /> */}
-                {
+                <ChildCounter count={this.state.number} />
+                {/* {
                     this.state.number===4?null:<ChildCounter count={this.state.number}/>
-                }
+                } */}
                 <button onClick={this.handleClick}>+</button>
             </div>
         )
@@ -61,9 +61,9 @@ class ChildCounter extends React.Component {
         console.log('ChildCounter 1.UNSAFE_componentWillMount');
     }
     shouldComponentUpdate(nextProps: any, nextState: any) {
-        // return true;
-        console.log('ChildCounter 5.UNSAFE_componentWillMount');
-        return nextProps.count%3===0;
+        return true;
+        // console.log('ChildCounter 5.UNSAFE_componentWillMount');
+        // return nextProps.count%3===0;
     }
     static getDerivedStateFromProps(nextProps: any, prevState: any) {
         const { count } = nextProps;

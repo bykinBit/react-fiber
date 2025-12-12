@@ -96,13 +96,15 @@ export class Component {
     }
     forceUpdate() {
         let oldRenderVdom = this.oldRenderVdom;
-        console.log('this.state',this.state);
-        
+        // Apply queued props before deriving state and rendering
+        const nextProps = this.nextProps || this.props;
+        const prevProps = this.props;
+        const prevState = this.state;
+        this.props = nextProps;
+        this.nextProps = undefined;
         const { getDerivedStateFromProps } = this.constructor as typeof Component;
         if(getDerivedStateFromProps){
-            const newState=getDerivedStateFromProps(this.props,this.state);
-            console.log('newState',newState);
-            
+            const newState=getDerivedStateFromProps(nextProps,this.state);
             if(newState){
                 this.state={...this.state,...newState}
             }
@@ -113,7 +115,7 @@ export class Component {
         this.oldRenderVdom = newRenderVdom;
         this.updater.flushCallbacks()
         if(this.componentDidUpdate){
-            this.componentDidUpdate(this.props,this.state);
+            this.componentDidUpdate(prevProps,prevState);
         }
     }
 }
