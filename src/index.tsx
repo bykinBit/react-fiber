@@ -1,50 +1,87 @@
 import React from "./react";
 import ReactDOM from "./react-dom/client";
+const ThemeContext = React.createContext();
+const { Provider, Consumer } = ThemeContext;
+const defaultStyle = {
+    padding: '10px',
+    border: '1px solid red'
 
-class ScrollList extends React.Component {
-    constructor(props:any){
-        super(props);
-        this.state={messages:[]}
-        this.wrapper=React.createRef();
-    }
-    addMessage=()=>{
-        this.setState((state:any)=>({
-            messages:[`${state.messages.length}`,...this.state.messages]
-        }));
-    }
-    componentDidMount(){
-        this.timerID=setInterval(()=>{
-            this.addMessage();
-        },1000)
-    }
-    getSnapshotBeforeUpdate(){
-        return {
-            prevScrollTop:this.wrapper.current.scrollTop,
-            prevScrollHeight:this.wrapper.current.scrollHeight
-        }
-    }
-    componentDidUpdate(prevProps:any,prevState:any,{prevScrollTop,prevScrollHeight}={} as any){
-        this.wrapper.current.scrollTop=prevScrollTop+(this.wrapper.current.scrollHeight-prevScrollHeight);
-    }
-    render(){
-        let style={
-            height:'100px',
-            width:'200px',
-            border:'1px solid red',
-            overflow:'auto'
-        }
+}
+function Title(_props: any) {
+    return (
+        <Consumer>
+            {
+                (contextVal:any) => (
+                    <div style={{ ...defaultStyle, border: `2px solid ${contextVal.color}` }}>
+                        Title
+                    </div>
+                )
+            }
+        </Consumer>
+    );
+}
+class Header extends React.Component {
+    static contextType = ThemeContext;
+    render() {
         return (
-            <div style={style} ref={this.wrapper}>
-                {
-                    this.state.messages.map((message:any,index:number)=>(
-                        <div key={index}>{message}</div>
-                    ))
-                }
+            <div style={{ ...defaultStyle, border: `2px solid ${this.context.color}` }}>
+                Header
+                <Title />
             </div>
         )
     }
 }
-const element = <ScrollList/>;
+function Content(_props: any) {
+    return (
+        <Consumer>
+            {
+                (contextVal:any) => (
+                    <div style={{ ...defaultStyle, border: `2px solid ${contextVal.color}` }}>
+                        Content
+                        <button onClick={()=>contextVal.changeColor('red')}>Red</button>
+                        <button onClick={()=>contextVal.changeColor('green')}>Green</button>
+                    </div>
+                )
+            }
+        </Consumer>
+    );
+}
+class Main extends React.Component {
+    static contextType = ThemeContext;
+    render() {
+        return (
+            <div style={{ ...defaultStyle, border: `2px solid ${this.context.color}` }}>
+                Main
+                <Content />
+            </div>
+        )
+    }
+}
+
+class Page extends React.Component {
+    constructor(props: any) {
+        super(props);
+        this.state = { color: 'red' }
+    }
+    changeColor = (color: any) => {
+        this.setState({ color });
+    }
+    render() {
+        const contextVal = { color: this.state.color, changeColor: this.changeColor }
+        return (
+            <Provider value={contextVal}>
+                <div style={{ ...defaultStyle, width: '300px', border: `2px solid ${this.state.color}` }}>
+                    <Header />
+                    <Main />
+                </div>
+            </Provider>
+        )
+
+
+    }
+
+}
+const element = <Page />;
 console.log(element);
 
 const DOMRoot = ReactDOM.createRoot(document.getElementById("root"));

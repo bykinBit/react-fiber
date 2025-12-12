@@ -1,4 +1,4 @@
-import { REACT_FORWARD_REF_TYPE, REACT_TEXT } from "../constant";
+import { REACT_CONTEXT, REACT_FORWARD_REF_TYPE, REACT_PROVIDER, REACT_TEXT } from "../constant";
 import { addEvent } from "../event";
 function updateProps(dom: any, oldProps = {}, newProps: any) {
     for (let key in newProps) {
@@ -45,6 +45,9 @@ function mountClassComponent(vdom: any): any {
     const defaultProps = type.defaultProps;
     const resolveProps = { ...defaultProps, ...props };
     const classInstance = new type(resolveProps);
+    if(type.contextType){
+        classInstance.context=type.contextType._currentValue
+    }
     vdom.classInstance = classInstance;
     if (ref) ref.current = classInstance;
     if (classInstance.UNSAFE_componentWillMount) {
@@ -58,10 +61,30 @@ function mountClassComponent(vdom: any): any {
     }
     return dom;
 }
+function mountProviderComponent(vdom:any):any{
+    const {type,props}=vdom;
+    const context=type._context;
+    context._currentValue=props.value;
+    let renderVdom=props.children;
+    vdom.oldRenderVdom=renderVdom;
+    return createDOM(renderVdom);
+}
+function mountConsumerComponent(vdom:any):any{
+    const {type,props}=vdom;
+    const context=type._context;
+    const renderVdom=props.children(context._currentValue);
+    vdom.oldRenderVdom=renderVdom;
+    return createDOM(renderVdom);
+}
+
 function createDOM(vdom: any) {
     const { type, props, ref } = vdom;
     let dom;
-    if (type && type.$$typeof === REACT_FORWARD_REF_TYPE) {
+    if (type && type.$$typeof === REACT_PROVIDER) {
+        return mountProviderComponent(vdom);
+    }else if (type && type.$$typeof === REACT_CONTEXT) {
+        return mountConsumerComponent(vdom);
+    }else if (type && type.$$typeof === REACT_FORWARD_REF_TYPE) {
         return mountForwardComponent(vdom);
     } else if (type === REACT_TEXT) {
         dom = document.createTextNode(props);
@@ -142,7 +165,13 @@ export function compareTwoVdom(parentDOM: any, oldVdom: any, newVdom: any, nextD
     // parentDOM.replaceChild(newDOM,oldDOM);
 }
 function updateElement(oldVdom:any,newVdom:any){
-    if(oldVdom.type===REACT_TEXT){
+    if(oldVdom.type.$$typeof===REACT_PROVIDER){
+        updateProviderComponent(oldVdom,newVdom);
+        return;
+    }if(oldVdom.type.$$typeof===REACT_CONTEXT){
+        updateContextComponent(oldVdom,newVdom);
+        return;
+    }else if(oldVdom.type===REACT_TEXT){
         let currentDOM=newVdom.dom=findDOM(oldVdom);
         if(oldVdom.props!==newVdom.props){
             currentDOM.textContent=newVdom.props;
@@ -159,6 +188,23 @@ function updateElement(oldVdom:any,newVdom:any){
             updateFunctionComponent(oldVdom,newVdom);
         }
     }
+}
+function updateProviderComponent(oldVdom:any,newVdom:any){
+    let parentDOM=findDOM(oldVdom).parentNode;
+    let {type,props}=newVdom;
+    const context=type._context;
+    context._currentValue=props.value;
+    let renderVdom=props.children;
+    compareTwoVdom(parentDOM,oldVdom.oldRenderVdom,renderVdom);
+    newVdom.oldRenderVdom=renderVdom;
+}
+function updateContextComponent(oldVdom:any,newVdom:any){
+    let parentDOM=findDOM(oldVdom).parentNode;
+    let {type,props}=newVdom;
+    let context=type._context;
+    let renderDom=props.children(context._currentValue);
+    compareTwoVdom(parentDOM,oldVdom.oldRenderVdom,renderDom);
+    newVdom.oldRenderVdom=renderDom;
 }
 function updateFunctionComponent(oldVdom:any,newVdom:any){
     let currentDOM=findDOM(oldVdom);

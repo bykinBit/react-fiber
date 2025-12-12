@@ -82,6 +82,8 @@ export class Component {
     static isReactComponent = true;
     // Subclasses can optionally implement React-like static lifecycle hook
     static getDerivedStateFromProps?: (props: any, state: any) => any;
+    // React-like static context binding
+    static contextType?: { _currentValue: any };
     props: any;
     state: any;
     context: any;
@@ -97,6 +99,10 @@ export class Component {
     forceUpdate() {
         let oldRenderVdom = this.oldRenderVdom;
         const oldDOM = findDOM(oldRenderVdom);
+        const Ctor = this.constructor as typeof Component;
+        if(Ctor.contextType){
+            this.context=Ctor.contextType._currentValue;
+        }
         // Apply queued props before deriving state and rendering
         const nextProps = this.nextProps || this.props;
         const prevProps = this.props;

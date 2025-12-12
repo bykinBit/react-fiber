@@ -1,4 +1,4 @@
-import { REACT_ELEMENT,REACT_FORWARD_REF_TYPE } from "./constant";
+import { REACT_CONTEXT, REACT_ELEMENT,REACT_FORWARD_REF_TYPE, REACT_PROVIDER } from "./constant";
 import { wrapToVdom } from "./utils";
 import {Component} from './Component'
 function createElement(type: any, config: any, ...children: any) {
@@ -27,6 +27,19 @@ function createElement(type: any, config: any, ...children: any) {
         key
     };
 }
+function createContext(){
+    let context={_currentValue:undefined} as any;
+    context.Provider={
+        $$typeof:REACT_PROVIDER,
+        _context:context
+
+    } as any;
+    context.Consumer={
+        $$typeof:REACT_CONTEXT,
+        _context:context
+    } as any;
+    return context;
+}
 function createRef(){
     return {current:null} as any;
 }
@@ -44,6 +57,7 @@ const React={
     Component,
     createRef,
     forwardRef,
+    createContext,
     Fragment
 }
 export default React;
