@@ -96,6 +96,7 @@ export class Component {
     }
     forceUpdate() {
         let oldRenderVdom = this.oldRenderVdom;
+        const oldDOM = findDOM(oldRenderVdom);
         // Apply queued props before deriving state and rendering
         const nextProps = this.nextProps || this.props;
         const prevProps = this.props;
@@ -110,12 +111,12 @@ export class Component {
             }
         }
         let newRenderVdom = this.render();
-        const oldDOM = findDOM(oldRenderVdom);
+        let snapshot=this.getSnapshotBeforeUpdate&&this.getSnapshotBeforeUpdate()
         compareTwoVdom(oldDOM.parentNode, oldRenderVdom, newRenderVdom);
         this.oldRenderVdom = newRenderVdom;
         this.updater.flushCallbacks()
         if(this.componentDidUpdate){
-            this.componentDidUpdate(prevProps,prevState);
+            this.componentDidUpdate(prevProps,prevState,snapshot);
         }
     }
 }

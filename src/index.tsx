@@ -1,92 +1,50 @@
 import React from "./react";
 import ReactDOM from "./react-dom/client";
 
-class Counter extends React.Component {
-    static defaultProps = {
-        name: 'hello'
-    }
-    constructor(props: any) {
+class ScrollList extends React.Component {
+    constructor(props:any){
         super(props);
-        this.state = { number: 0 }
-        console.log('Counter 1.constructor');
+        this.state={messages:[]}
+        this.wrapper=React.createRef();
     }
-    UNSAFE_componentWillMount() {
-        console.log('Counter 2.componentWillMount');
+    addMessage=()=>{
+        this.setState((state:any)=>({
+            messages:[`${state.messages.length}`,...this.state.messages]
+        }));
     }
-    handleClick = () => {
-        this.setState({ number: this.state.number + 1 })
+    componentDidMount(){
+        this.timerID=setInterval(()=>{
+            this.addMessage();
+        },1000)
     }
-    shouldComponentUpdate(nextProps: any, nextState: any) {
-        console.log('Counter 5.shouldComponentUpdate');
-        return true;
-        // return nextState.number % 2 === 0;
+    getSnapshotBeforeUpdate(){
+        return {
+            prevScrollTop:this.wrapper.current.scrollTop,
+            prevScrollHeight:this.wrapper.current.scrollHeight
+        }
     }
-    UNSAFE_componentWillUpdate() {
-        console.log('Counter 6.componentWillUpdate');
+    componentDidUpdate(prevProps:any,prevState:any,{prevScrollTop,prevScrollHeight}={} as any){
+        this.wrapper.current.scrollTop=prevScrollTop+(this.wrapper.current.scrollHeight-prevScrollHeight);
     }
-    componentDidUpdate() {
-        console.log('Counter 7.componentDidUpdate');
-    }
-    render() {
-        console.log('Counter 3.render');
+    render(){
+        let style={
+            height:'100px',
+            width:'200px',
+            border:'1px solid red',
+            overflow:'auto'
+        }
         return (
-            <div>
-                <p>number:{this.state.number}</p>
-                <ChildCounter count={this.state.number} />
-                {/* {
-                    this.state.number===4?null:<ChildCounter count={this.state.number}/>
-                } */}
-                <button onClick={this.handleClick}>+</button>
+            <div style={style} ref={this.wrapper}>
+                {
+                    this.state.messages.map((message:any,index:number)=>(
+                        <div key={index}>{message}</div>
+                    ))
+                }
             </div>
         )
     }
-    componentDidMount() {
-        console.log('Counter 4.componentDidMount');
-    }
 }
-function FunctionCounter(props: any) {
-    return (
-        <div>{props.count}</div>
-    )
-}
-class ChildCounter extends React.Component {
-    constructor(props: any) {
-        super(props);
-        this.state = { number: 0 }
-    }
-    UNSAFE_componentWillReceiveProps(newProps: any) {
-        console.log('ChildCounter 4.UNSAFE_componentWillReceiveProps');
-    }
-    UNSAFE_componentWillMount() {
-        console.log('ChildCounter 1.UNSAFE_componentWillMount');
-    }
-    shouldComponentUpdate(nextProps: any, nextState: any) {
-        return true;
-        // console.log('ChildCounter 5.UNSAFE_componentWillMount');
-        // return nextProps.count%3===0;
-    }
-    static getDerivedStateFromProps(nextProps: any, prevState: any) {
-        const { count } = nextProps;
-        if (count % 2 === 0) {
-            return { number: count * 2 }
-        } else {
-            return { number: count * 3 }
-        }
-    }
-    render() {
-        console.log('ChildCounter 2.render',this.state.number)
-        return (
-            <p>childCount:{this.state.number}</p>
-        );
-    }
-    componentDidMount() {
-        console.log('ChildCounter 3.componentDidMount');
-    }
-    UNSAFE_componentWillUnmount() {
-        console.log('ChildCounter 6.UNSAFE_componentWillUnmount');
-    }
-}
-const element = <Counter/>;
+const element = <ScrollList/>;
 console.log(element);
 
 const DOMRoot = ReactDOM.createRoot(document.getElementById("root"));
