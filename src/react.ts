@@ -51,6 +51,18 @@ function forwardRef(render:any): any{
         render
     }
 }
+function cloneElement(element:any,newProps:any,...newChildren:any){
+    let props={...element.props,...newProps}
+    if(newChildren.length>1){
+        props.children=newChildren.map(wrapToVdom);
+    }else if(newChildren.length===1){
+        props.children=wrapToVdom(newChildren[0]);
+    }
+    return {
+        ...element,
+        props
+    }
+}
 const Fragment = "fragment";
 const React={
     createElement,
@@ -58,6 +70,7 @@ const React={
     createRef,
     forwardRef,
     createContext,
+    cloneElement,
     Fragment
 }
 export default React;
