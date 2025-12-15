@@ -1,4 +1,4 @@
-import { REACT_CONTEXT, REACT_FORWARD_REF_TYPE, REACT_PROVIDER, REACT_TEXT } from "../constant";
+import { REACT_CONTEXT, REACT_FORWARD_REF_TYPE, REACT_MEMO, REACT_PROVIDER, REACT_TEXT } from "../constant";
 import { addEvent } from "../event";
 function updateProps(dom: any, oldProps = {}, newProps: any) {
     for (let key in newProps) {
@@ -76,11 +76,18 @@ function mountConsumerComponent(vdom:any):any{
     vdom.oldRenderVdom=renderVdom;
     return createDOM(renderVdom);
 }
-
+function mountMemoComponent(vdom:any):any{
+    const {type:{type:functionComponent},props}=vdom;
+    const renderVdom=functionComponent(props);
+    vdom.oldRenderVdom=renderVdom;
+    return createDOM(renderVdom);
+}
 function createDOM(vdom: any) {
     const { type, props, ref } = vdom;
     let dom;
-    if (type && type.$$typeof === REACT_PROVIDER) {
+    if (type && type.$$typeof === REACT_MEMO) {
+        return mountMemoComponent(vdom);
+    }else if (type && type.$$typeof === REACT_PROVIDER) {
         return mountProviderComponent(vdom);
     }else if (type && type.$$typeof === REACT_CONTEXT) {
         return mountConsumerComponent(vdom);
@@ -165,7 +172,10 @@ export function compareTwoVdom(parentDOM: any, oldVdom: any, newVdom: any, nextD
     // parentDOM.replaceChild(newDOM,oldDOM);
 }
 function updateElement(oldVdom:any,newVdom:any){
-    if(oldVdom.type.$$typeof===REACT_PROVIDER){
+    if(oldVdom.type.$$typeof===REACT_MEMO){
+        updateMemoComponent(oldVdom,newVdom);
+        return;
+    }else if(oldVdom.type.$$typeof===REACT_PROVIDER){
         updateProviderComponent(oldVdom,newVdom);
         return;
     }if(oldVdom.type.$$typeof===REACT_CONTEXT){
@@ -187,6 +197,18 @@ function updateElement(oldVdom:any,newVdom:any){
         }else{
             updateFunctionComponent(oldVdom,newVdom);
         }
+    }
+}
+function updateMemoComponent(oldVdom:any,newVdom:any){
+    let {type:{compare,type:functionComponent}}=oldVdom;
+    if(compare(oldVdom.props,newVdom.props)){
+        newVdom.oldRenderVdom=oldVdom.oldRenderVdom;
+    }else{
+        const oldDOM=findDOM(oldVdom);
+        const parentDOM=oldDOM.parentNode;
+        const renderVdom=functionComponent(newVdom.props);
+        compareTwoVdom(parentDOM,oldVdom.oldRenderVdom,renderVdom);
+        newVdom.oldRenderVdom=renderVdom;
     }
 }
 function updateProviderComponent(oldVdom:any,newVdom:any){
@@ -225,8 +247,8 @@ function updateClassComponent(oldVdom:any,newVdom:any){
 
 }
 function updateChildren(parentDOM:any,oldVChildren:any,newVChildren:any){
-    oldVChildren=Array.isArray(oldVChildren)?oldVChildren:[oldVChildren];
-    newVChildren=Array.isArray(newVChildren)?newVChildren:[newVChildren];
+    oldVChildren=Array.isArray(oldVChildren)?oldVChildren:oldVChildren?[oldVChildren]:[];
+    newVChildren=Array.isArray(newVChildren)?newVChildren:newVChildren?[newVChildren]:[];
     const keyedOldMap=new Map();
     let lastPlacedIndex=-1;
     oldVChildren.forEach((oldChild:any,index:number)=>{

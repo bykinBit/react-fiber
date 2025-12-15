@@ -1,5 +1,5 @@
-import { REACT_CONTEXT, REACT_ELEMENT,REACT_FORWARD_REF_TYPE, REACT_PROVIDER } from "./constant";
-import { wrapToVdom } from "./utils";
+import { REACT_CONTEXT, REACT_ELEMENT,REACT_FORWARD_REF_TYPE, REACT_MEMO, REACT_PROVIDER } from "./constant";
+import { wrapToVdom,shallowEqual } from "./utils";
 import {Component} from './Component'
 function createElement(type: any, config: any, ...children: any) {
     let ref;
@@ -63,6 +63,20 @@ function cloneElement(element:any,newProps:any,...newChildren:any){
         props
     }
 }
+// Explicitly type as any so TS treats the returned memoized component as a
+// valid JSX element type (our runtime object is not callable).
+function memo(type:any,compare=shallowEqual): any{
+    return {
+        $$typeof:REACT_MEMO,
+        type,
+        compare
+    }
+}
+class PureComponent extends Component{
+    shouldComponentUpdate(newProps:any,nextState:any){
+        return !shallowEqual(this.props,newProps)||!shallowEqual(this.state,nextState);
+    }
+}
 const Fragment = "fragment";
 const React={
     createElement,
@@ -71,6 +85,8 @@ const React={
     forwardRef,
     createContext,
     cloneElement,
+    PureComponent,
+    memo,
     Fragment
 }
 export default React;
