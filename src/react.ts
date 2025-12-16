@@ -1,6 +1,7 @@
 import { REACT_CONTEXT, REACT_ELEMENT,REACT_FORWARD_REF_TYPE, REACT_MEMO, REACT_PROVIDER } from "./constant";
 import { wrapToVdom,shallowEqual } from "./utils";
 import {Component} from './Component'
+import * as hooks from "./react-dom/client";
 function createElement(type: any, config: any, ...children: any) {
     let ref;
     let key;
@@ -86,7 +87,9 @@ const React={
     createContext,
     cloneElement,
     PureComponent,
+    ...hooks,
     memo,
     Fragment
 }
+export * from './react-dom/client'
 export default React;

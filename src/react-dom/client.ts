@@ -1,5 +1,8 @@
 import { REACT_CONTEXT, REACT_FORWARD_REF_TYPE, REACT_MEMO, REACT_PROVIDER, REACT_TEXT } from "../constant";
 import { addEvent } from "../event";
+let hookStates=[] as any[];
+let hookIndex=0;
+let scheduleUpdate:any;
 function updateProps(dom: any, oldProps = {}, newProps: any) {
     for (let key in newProps) {
         if (key === 'children') {
@@ -328,6 +331,85 @@ function unMountVdom(vdom: any) {
     }
     if (currentDOM) currentDOM.remove();
 }
+export function useCallback(callback:any,deps:any[]){
+    if(hookStates[hookIndex]){
+        let [lastCalback,lastDeps]=hookStates[hookIndex];
+        let same=deps.every((item:any,index:number)=>item===lastDeps[index]);
+        if(same){
+            hookIndex++;
+            return lastCalback;
+        }else{
+            hookStates[hookIndex++]=[callback,deps];
+            return callback;
+        }
+    }else{
+        hookStates[hookIndex++]=[callback,deps];
+        return callback;
+    }
+}
+export function useMemo(factory:any,deps:any[]){
+    if(hookStates[hookIndex]){
+        let [lastMemo,lastDeps]=hookStates[hookIndex];
+        let same=deps.every((item:any,index:number)=>item===lastDeps[index]);
+        if(same){
+            hookIndex++;
+            return lastMemo;
+        }else{
+            const newMemo=factory();
+            hookStates[hookIndex++]=[newMemo,deps];
+            return newMemo;
+        }
+    }else{
+        const newMemo=factory();
+        hookStates[hookIndex++]=[newMemo,deps];
+        return newMemo;
+    }
+}
+export function useEffect(callback:any,deps?:any[]){
+    const currentIndex=hookIndex;
+    if(hookStates[currentIndex]){
+        let [destory,lastDeps]=hookStates[currentIndex];
+        let same=deps&&deps.every((item:any,index:number)=>item===lastDeps[index]);
+        if(same){
+            hookIndex++;
+        }else{
+            destory?.();
+            setTimeout(()=>{
+                hookStates[currentIndex]=[callback(),deps]
+            });
+            hookIndex++;
+        }
+    }else{
+        setTimeout(()=>{
+            hookStates[currentIndex]=[callback(),deps]
+        });
+        hookIndex++;
+    }
+}
+export function useContext(context:any){
+    return context._currentValue;
+}
+export function useReducer(reducer:any,initalState:any){
+    const oldState=hookStates[hookIndex]=hookStates[hookIndex]||initalState;
+    const currentIndex=hookIndex;
+    function dispatch(action:any){
+        let newState=reducer?reducer(oldState,action):typeof action==='function'?action(oldState):action;
+        hookStates[currentIndex]=newState;
+        scheduleUpdate();
+    }
+    return [hookStates[hookIndex++],dispatch]
+}
+export function useState(initalState:any){
+    return useReducer(null,initalState);
+    // const oldState=hookStates[hookIndex]=hookStates[hookIndex]||initalState;
+    // const currentIndex=hookIndex;
+    // function setState(action:any){
+    //     let newState=typeof action==='function'?action(oldState):action;
+    //     hookStates[currentIndex]=newState;
+    //     scheduleUpdate();
+    // }
+    // return [hookStates[hookIndex++],setState]
+}
 class DOMRoot {
     container: any;
     constructor(container: any) {
@@ -335,6 +417,10 @@ class DOMRoot {
     }
     render(vdom: any) {
         mount(vdom, this.container);
+        scheduleUpdate=()=>{
+            hookIndex=0;
+            compareTwoVdom(this.container,vdom,vdom)
+        }
     }
 }
 function createRoot(container: any) {
