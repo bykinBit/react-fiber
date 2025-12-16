@@ -175,7 +175,10 @@ export function compareTwoVdom(parentDOM: any, oldVdom: any, newVdom: any, nextD
     // parentDOM.replaceChild(newDOM,oldDOM);
 }
 function updateElement(oldVdom:any,newVdom:any){
-    if(oldVdom.type.$$typeof===REACT_MEMO){
+    if(oldVdom.type.$$typeof===REACT_FORWARD_REF_TYPE){
+        updateForwardComponent(oldVdom,newVdom);
+        return;
+    }else if(oldVdom.type.$$typeof===REACT_MEMO){
         updateMemoComponent(oldVdom,newVdom);
         return;
     }else if(oldVdom.type.$$typeof===REACT_PROVIDER){
@@ -201,6 +204,15 @@ function updateElement(oldVdom:any,newVdom:any){
             updateFunctionComponent(oldVdom,newVdom);
         }
     }
+}
+function updateForwardComponent(oldVdom:any,newVdom:any){
+    let currentDOM=findDOM(oldVdom);
+    if(!currentDOM)return;
+    let parentDOM=currentDOM.parentNode;
+    const {type,props,ref}=newVdom;
+    const newRenderVdom=type.render(props,ref);
+    compareTwoVdom(parentDOM,oldVdom.oldRenderVdom,newRenderVdom);
+    newVdom.oldRenderVdom=newRenderVdom;
 }
 function updateMemoComponent(oldVdom:any,newVdom:any){
     let {type:{compare,type:functionComponent}}=oldVdom;
@@ -363,6 +375,34 @@ export function useMemo(factory:any,deps:any[]){
         const newMemo=factory();
         hookStates[hookIndex++]=[newMemo,deps];
         return newMemo;
+    }
+}
+export function useImperativeHandle(ref:any,handle:any){
+    ref.current=handle();
+}
+export function useRef(initialState?:any){
+    hookStates[hookIndex]=hookStates[hookIndex]||{current:initialState}
+    return hookStates[hookIndex++]
+}
+export function useLayoutEffect(callback:any,deps?:any[]){
+    const currentIndex=hookIndex;
+    if(hookStates[currentIndex]){
+        let [destory,lastDeps]=hookStates[currentIndex];
+        let same=deps&&deps.every((item:any,index:number)=>item===lastDeps[index]);
+        if(same){
+            hookIndex++;
+        }else{
+            destory?.();
+            queueMicrotask(()=>{
+                hookStates[currentIndex]=[callback(),deps]
+            });
+            hookIndex++;
+        }
+    }else{
+        queueMicrotask(()=>{
+            hookStates[currentIndex]=[callback(),deps]
+        });
+        hookIndex++;
     }
 }
 export function useEffect(callback:any,deps?:any[]){

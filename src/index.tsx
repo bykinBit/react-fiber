@@ -1,22 +1,73 @@
-import React, { useReducer,useContext,useState,useEffect } from "./react";
+import React, { useReducer,useContext,useState,useEffect,useLayoutEffect,useRef,useImperativeHandle } from "./react";
 import ReactDOM from "./react-dom/client";
-function Counter(){
-    const [number,setNumber]=useState(0);
-    useEffect(()=>{
-        console.log('Start setInterval');
-        const timer=setInterval(()=>{
-            console.log('tick');
-            setNumber((number:number)=>number+1);
-        },1000);
-        return ()=>{
-            console.log('Destory setInterval');
-            clearInterval(timer);            
+function Child(props:any,forwardRef:any){
+    const inputRef=useRef(null);
+    const [count,setCount]=useState(0);
+    useImperativeHandle(forwardRef,()=>({
+        myFocus(){
+            inputRef.current.focus()
         }
-    });
+    }));
     return (
-        <div>{number}</div>
+        <div>
+            <input type="text" ref={inputRef}/>
+            <p>Child:{count}</p>
+            <button onClick={()=>setCount(count+1)}>+</button>
+        </div>
     )
 }
+const ForwardChild=React.forwardRef(Child);
+function Parent(){
+    const [number,setNumber]=useState(0);
+    const inputRef=useRef(null);
+    const getFocus=()=>{
+        inputRef.current.myFocus();
+        // inputRef.current.focus()
+    }
+    return (
+        <div>
+            <ForwardChild ref={inputRef}/>
+            <button onClick={getFocus}>Get Focus</button>
+            <p>{number}</p>
+            <button onClick={()=>{setNumber(number+1)}}>+</button>
+        </div>
+    );
+}
+const element=<Parent/>
+// function Animation(){
+//     const ref=useRef();
+//     const styleObj={
+//         width:'100px',
+//         height:'100px',
+//         borderRadius:'50%',
+//         backgroundColor:'red'
+//     }
+//     useLayoutEffect(()=>{
+//         ref.current.style.transform='translate(500px)';
+//         ref.current.style.transition='all 500ms'
+//     });
+//     return (
+//         <div style={styleObj} ref={ref}></div>
+//     )
+// }
+// const element=<Animation/>;
+// function Counter(){
+//     const [number,setNumber]=useState(0);
+//     useEffect(()=>{
+//         console.log('Start setInterval');
+//         const timer=setInterval(()=>{
+//             console.log('tick');
+//             setNumber((number:number)=>number+1);
+//         },1000);
+//         return ()=>{
+//             console.log('Destory setInterval');
+//             clearInterval(timer);            
+//         }
+//     });
+//     return (
+//         <div>{number}</div>
+//     )
+// }
 // const CounterContext=React.createContext();
 // function reducer(state={number:0},action:any){
 //     switch(action.type){
@@ -81,6 +132,6 @@ function Counter(){
 //         </div>
 //     )
 // }
-const element = <Counter />
+// const element = <Counter />
 const DOMRoot = ReactDOM.createRoot(document.getElementById("root"));
 DOMRoot.render(element);
